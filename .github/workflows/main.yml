@@ -12,13 +12,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Unzip and Move Files
+    - name: Unzip Project
       run: |
-        unzip -o em-gradle.zip
-        # البحث عن مكان build.gradle ونقل جميع ملفات المشروع للجذر
-        TARGET_DIR=$(dirname $(find . -mindepth 2 -name "build.gradle*" | head -n 1))
-        if [ -n "$TARGET_DIR" ]; then
-          cp -r $TARGET_DIR/* .
+        # فك ضغط أي ملف مضغوط موجود سواء zip أو apk
+        find . -maxdepth 2 \( -name "*.zip" -o -name "*.apk" \) -exec unzip -o {} \; || true
+        
+        # البحث عن مجلد app ونقله للجذر الرئيسي إذا كان بداخل مجلد فرعي
+        APP_DIR=$(find . -mindepth 2 -type d -name "app" | head -n 1)
+        if [ -n "$APP_DIR" ]; then
+          echo "Found app directory at $APP_DIR, moving to root..."
+          cp -r $APP_DIR .
         fi
 
     - name: set up JDK 17
