@@ -1,0 +1,6 @@
+{
+  "name": "EM - بكالوريا وثانوية عامة",
+  "description": "تطبيق المساعد الدراسي الشامل لطلاب البكالوريا والثانوية العامة مع تنظيم الوقت، القرآن، مواقيت الصلاة والمناهج الدراسية",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
