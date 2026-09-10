@@ -1,53 +1,37 @@
+My Daddy:
 name: Build Android APK
 
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout code
+uses: actions/checkout@v4
 
-    steps:
-    - uses: actions/checkout@v4
+- name: Set up JDK 17
+uses: actions/setup-java@v4
+with:
+distribution: 'temurin'
+java-version: '17'
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+- name: Find and Build APK
+run: |
+# البحث التلقائي عن ملف gradlew وتشغيله بناءً على مكانه
+GRADLEW_PATH=$(find . -name "gradlew" -type f)
+if [ -z "$GRADLEW_PATH" ]; then
+echo "Error: gradlew not found!"
+exit 1
+fi
+PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+echo "Found project at: $PROJECT_DIR"
+cd "$PROJECT_DIR"
+chmod +x gradlew
+./gradlew assembleDebug
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-
-    - name: Fix Directory Structure and Build
-      run: |
-        echo "=== 1. Unzipping any compressed archives ==="
-        find . -maxdepth 2 \( -name "*.zip" -o -name "*.apk" \) -exec unzip -o {} \; || true
-
-        echo "=== 2. Locating Root Gradle Project ==="
-        # Search for build.gradle.kts or build.gradle that is NOT inside app folder
-        BUILD_FILE=$(find . -name "settings.gradle*" -o -name "build.gradle*" | grep -v "/app/" | head -n 1)
-        
-        if [ -z "$BUILD_FILE" ]; then
-          echo "No root build file found! Searching for any gradle file..."
-          BUILD_FILE=$(find . -name "build.gradle*" | head -n 1)
-        fi
-
-        PROJ_DIR=$(dirname "$BUILD_FILE")
-        echo "Project directory determined as: $PROJ_DIR"
-
-        cd "$PROJ_DIR"
-
-        echo "=== 3. Generating Gradle Wrapper & Building APK ==="
-        gradle wrapper
-        chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace --continue
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug
-        path: "**/build/outputs/apk/debug/*.apk"
-        
+- name: Upload APK Artifact
+uses: actions/upload-artifact@v4
+with:
+name: app-debug
+path: '**/build/outputs/apk/debug/app-debug.apk'
